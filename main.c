@@ -6,12 +6,14 @@
 #include <time.h>
 #include <unistd.h>
 
-char get_date(char *buffer, size_t max_size) {
+char *get_date() {
   time_t raw_time;
   time(&raw_time);
-
   struct tm *local_time = localtime(&raw_time);
-  return strftime(buffer, max_size, "%a %b %d | %R", local_time); // make user be able to format this
+  static char buffer[40];
+
+  strftime(buffer, sizeof(buffer), "%a %b %d | %R", local_time); // make user be able to format this
+  return buffer;
 }
 
 int get_vol(void) {
@@ -58,13 +60,9 @@ int main(void) {
   Window root = DefaultRootWindow(dpy);
 
   while (1) {
-    char date[40];
-    char vol[10];
     char status[400];
 
-    get_date(date, sizeof(date));
-
-    snprintf(status, sizeof(status), " %s Vol: %d ", date, get_vol());
+    snprintf(status, sizeof(status), " %s Vol: %d ", get_date(), get_vol());
 
     XStoreName(dpy, root, status);
     XFlush(dpy);
