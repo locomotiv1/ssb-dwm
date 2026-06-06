@@ -12,13 +12,12 @@ char *get_date() {
   struct tm *local_time = localtime(&raw_time);
   static char buffer[35];
 
-  strftime(buffer, sizeof(buffer), "%a %b %d | %R", local_time); // make user be able to format this
+  strftime(buffer, sizeof(buffer), "%a %b %d %R", local_time); // make user be able to format this
   return buffer;
 }
 
 int get_vol(void) {
   long min, max, vol;
-  int unmuted;
   snd_mixer_t *handle;
   snd_mixer_selem_id_t *sid;
   const char *card = "default";
@@ -59,9 +58,11 @@ typedef struct {
 
 
 RamInfo get_ram() {
+  // for some reason it constantly shows 300mb more that its actually using
   RamInfo info = { .total = 0, .used = 0 };
 
   char buffer[100];
+  long available = 0;
   int found = 0;
   FILE *fl = fopen("/proc/meminfo", "r");
 
@@ -71,11 +72,12 @@ RamInfo get_ram() {
       found++;
     }
     else if (strncmp(buffer, "MemAvailable:", 13) == 0) {
-      sscanf(buffer, "MemAvailable: %lu", &info.used);
+      sscanf(buffer, "MemAvailable: %lu", &available);
       found++;
     }
 
     if (found == 2) {
+      info.used = info.total - available;
       break;
     }
   }
@@ -89,8 +91,6 @@ int main(void) {
   if (!dpy)
     return 1;
 
-
-
   Window root = DefaultRootWindow(dpy);
 
   while (1) {
@@ -98,11 +98,10 @@ int main(void) {
 
     RamInfo ram;
     ram = get_ram();
-
     double total_gb = (double)ram.total / 1048576.0;
     double used_gb = (double)ram.used / 1048576.0;
 
-    snprintf(status, sizeof(status), " %s  Vol: %d RAM: %lf %lf", get_date(), get_vol(), total_gb, used_gb);
+    snprintf(status, sizeof(status), " %s | Vol: %d | RAM: %.2fGB/%.2fGB  ", get_date(), get_vol(), used_gb, total_gb);
 
     XStoreName(dpy, root, status);
     XFlush(dpy);
