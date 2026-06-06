@@ -1,3 +1,4 @@
+#include "config.h"
 #include <X11/Xlib.h>
 #include <alsa/asoundlib.h>
 #include <alsa/control.h>
@@ -6,14 +7,12 @@
 #include <time.h>
 #include <unistd.h>
 
-char *get_date() {
+void get_date(char *out) {
   time_t raw_time;
   time(&raw_time);
   struct tm *local_time = localtime(&raw_time);
-  static char buffer[35];
 
-  strftime(buffer, sizeof(buffer), "%a %b %d %R", local_time);
-  return buffer;
+  strftime(out, 70, date_format, local_time);
 }
 
 int get_vol(void) {
@@ -42,7 +41,8 @@ int get_vol(void) {
   snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
 
   // Get the current volume (using the Left channel as the standard)
-  snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &vol); // TODO: Handle Muted string
+  snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT,
+                                      &vol); // TODO: Handle Muted string
 
   snd_mixer_close(handle);
 
@@ -52,14 +52,13 @@ int get_vol(void) {
 }
 
 typedef struct {
-    long total;
-    long used;
+  long total;
+  long used;
 } RamInfo;
-
 
 RamInfo get_ram() {
   // for some reason it constantly shows 300mb more that its actually using
-  RamInfo info = { .total = 0, .used = 0 };
+  RamInfo info = {.total = 0, .used = 0};
 
   char buffer[100];
   long available = 0;
@@ -70,8 +69,7 @@ RamInfo get_ram() {
     if (strncmp(buffer, "MemTotal:", 9) == 0) {
       sscanf(buffer, "MemTotal: %lu", &info.total);
       found++;
-    }
-    else if (strncmp(buffer, "MemAvailable:", 13) == 0) {
+    } else if (strncmp(buffer, "MemAvailable:", 13) == 0) {
       sscanf(buffer, "MemAvailable: %lu", &available);
       found++;
     }
@@ -90,19 +88,31 @@ int main(void) {
   Display *dpy = XOpenDisplay(NULL);
   if (!dpy)
     return 1;
-
   Window root = DefaultRootWindow(dpy);
 
   while (1) {
     char status[400];
+    status[0] = '\0';
 
-    RamInfo ram;
-    ram = get_ram();
-    double total_gb = (double)ram.total / 1048576.0;
-    double used_gb = (double)ram.used / 1048576.0;
+    // Temporary buffers for each loop iteration
+    char module_output[100];
+    char formatted_block[150];
 
-    snprintf(status, sizeof(status), " %s | Vol: %d | RAM: %.2fGB/%.2fGB  ", get_date(), get_vol(), used_gb, total_gb);
+    size_t num_blocks = sizeof(blocks) / sizeof(blocks[0]);
 
+    for (size_t i = 0; i < num_blocks; i++) {
+
+      blocks[i].func(module_output);
+
+      // B. Put the data into the user's format string (e.g., " Date: %s ")
+      snprintf(formatted_block, sizeof(formatted_block), blocks[i].format,
+               module_output);
+
+      // C. Glue it to the end of our main status string
+      strcat(status, formatted_block);
+    }
+
+    // 3. Print the final assembled string!
     XStoreName(dpy, root, status);
     XFlush(dpy);
 
