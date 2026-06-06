@@ -12,7 +12,7 @@ char *get_date() {
   struct tm *local_time = localtime(&raw_time);
   static char buffer[35];
 
-  strftime(buffer, sizeof(buffer), "%a %b %d %R", local_time); // make user be able to format this
+  strftime(buffer, sizeof(buffer), "%a %b %d %R", local_time);
   return buffer;
 }
 
