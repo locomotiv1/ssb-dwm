@@ -15,7 +15,7 @@ void get_date(char *out) {
   strftime(out, 70, date_format, local_time);
 }
 
-int get_vol(void) {
+void get_vol(char *out) {
   long min, max, vol;
   snd_mixer_t *handle;
   snd_mixer_selem_id_t *sid;
@@ -33,41 +33,29 @@ int get_vol(void) {
   snd_mixer_selem_id_set_name(sid, selem_name);
   snd_mixer_elem_t *elem = snd_mixer_find_selem(handle, sid);
 
-  if (!elem) {
-    snd_mixer_close(handle);
-    return -1;
-  }
-
   snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
 
   // Get the current volume (using the Left channel as the standard)
   snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT,
                                       &vol); // TODO: Handle Muted string
-
   snd_mixer_close(handle);
 
   int percentage = (int)(((double)(vol - min) / (double)(max - min)) * 100);
-
-  return percentage;
+  snprintf(out, 10, "%d", percentage);
 }
 
-typedef struct {
-  long total;
-  long used;
-} RamInfo;
-
-RamInfo get_ram() {
+void get_ram(char *out) {
   // for some reason it constantly shows 300mb more that its actually using
-  RamInfo info = {.total = 0, .used = 0};
 
   char buffer[100];
+  long total = 0;
   long available = 0;
   int found = 0;
   FILE *fl = fopen("/proc/meminfo", "r");
 
   while (fgets(buffer, sizeof(buffer), fl)) {
     if (strncmp(buffer, "MemTotal:", 9) == 0) {
-      sscanf(buffer, "MemTotal: %lu", &info.total);
+      sscanf(buffer, "MemTotal: %lu", &total);
       found++;
     } else if (strncmp(buffer, "MemAvailable:", 13) == 0) {
       sscanf(buffer, "MemAvailable: %lu", &available);
@@ -75,13 +63,15 @@ RamInfo get_ram() {
     }
 
     if (found == 2) {
-      info.used = info.total - available;
+      long used = total - available;
+      double total_gb = (double)total / 1048576.0;
+      double used_gb = (double)used / 1048576.0;
+      snprintf(out, 50, ram_format, used_gb, total_gb);
       break;
     }
   }
 
   fclose(fl);
-  return info;
 }
 
 int main(void) {
@@ -94,7 +84,6 @@ int main(void) {
     char status[400];
     status[0] = '\0';
 
-    // Temporary buffers for each loop iteration
     char module_output[100];
     char formatted_block[150];
 
@@ -104,15 +93,12 @@ int main(void) {
 
       blocks[i].func(module_output);
 
-      // B. Put the data into the user's format string (e.g., " Date: %s ")
       snprintf(formatted_block, sizeof(formatted_block), blocks[i].format,
                module_output);
 
-      // C. Glue it to the end of our main status string
       strcat(status, formatted_block);
     }
 
-    // 3. Print the final assembled string!
     XStoreName(dpy, root, status);
     XFlush(dpy);
 

@@ -1,4 +1,6 @@
 void get_date(char *out);
+void get_vol(char *out);
+void get_ram(char *out);
 
 typedef struct {
   const char *format;
@@ -6,9 +8,11 @@ typedef struct {
 } Block;
 
 static const char *date_format = "%a %b %d | %R";
+static const char *ram_format = "%.2f/%.2fGB";
 
 static const Block blocks[] = {
-    // note that you need to familiriaze yourself with the returned data type
     //  Format string             Function to run
     {"%s",                        get_date},
+    {" %s ",                      get_ram},
+    {"VOL: %s",                   get_vol},
 };
