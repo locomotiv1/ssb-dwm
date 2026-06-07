@@ -118,7 +118,7 @@ int main(void) {
     return 1;
   Window root = DefaultRootWindow(dpy);
 
-  while (1) {
+  for (;;sleep(1)){
     char status[400];
     status[0] = '\0';
 
@@ -140,7 +140,6 @@ int main(void) {
     XStoreName(dpy, root, status);
     XFlush(dpy);
 
-    sleep(1);
   }
 
   XCloseDisplay(dpy);
