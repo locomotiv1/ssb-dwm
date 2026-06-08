@@ -10,7 +10,10 @@ TARGET = ssb-dwm
 
 all: $(TARGET)
 
-$(TARGET): $(SRC)
+config.h:
+	cp config.def.h config.h
+
+$(TARGET): $(SRC) config.h
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LIBS)
 
 clean:
