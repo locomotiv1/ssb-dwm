@@ -118,7 +118,7 @@ int main(void) {
     return 1;
   Window root = DefaultRootWindow(dpy);
 
-  for (;;sleep(1)){
+  for (;;sleep(30)){
     char status[400];
     status[0] = '\0';
 

@@ -14,7 +14,7 @@ static const char *ram_format = "%.2f/%.2fGB";
 static const Block blocks[] = {
     //  Format string             Function to run
     {"%s",                        get_date},
-    {" %s ",                      get_ram},
+    {" RAM: %s ",                 get_ram},
     {"VOL: %s ",                  get_vol},
     {"MIC: %s ",                  get_mic},
 };

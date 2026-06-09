@@ -18,6 +18,8 @@ When you add your custom functions you need to remember to declare and format th
 
 It acts as a blueprint for default configuration/fallback.
 
+You might also want to change the bar update time in main.c according to your needs. By default it is set to 30 seconds.
+
 ## Installation
 
 Copy the repo and run `sudo make clean install`
