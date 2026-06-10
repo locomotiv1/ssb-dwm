@@ -1,7 +1,5 @@
 void get_date(char *out);
-void get_vol(char *out);
 void get_ram(char *out);
-void get_mic(char *out);
 
 typedef struct {
   const char *format;
@@ -15,6 +13,4 @@ static const Block blocks[] = {
     //  Format string             Function to run
     {"%s",                        get_date},
     {" RAM: %s ",                 get_ram},
-    {"VOL: %s ",                  get_vol},
-    {"MIC: %s ",                  get_mic},
 };
