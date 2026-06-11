@@ -4,6 +4,7 @@
 #include <alsa/control.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -16,7 +17,7 @@ void get_date(char *out) {
 }
 
 void get_ram(char *out) {
-  // for some reason it constantly shows 300mb more that its actually using
+  // Fix the GiB format
 
   char buffer[100];
   long total = 0;
@@ -45,6 +46,24 @@ void get_ram(char *out) {
   fclose(fl);
 }
 
+void get_disk(char *out) {
+  const unsigned int GB = (1024.0 * 1024.0) * 1024.0;
+  struct statvfs buffer;
+  if (statvfs("/", &buffer) == -1) {
+    snprintf(out, 50, "statvfs() error");
+    return;
+  }
+
+  unsigned long long total_blocks = buffer.f_blocks;
+  unsigned long long avail_blocks = buffer.f_bavail;
+  unsigned long long used_blocks = total_blocks - avail_blocks;
+
+  double used_gb = ((double)used_blocks * buffer.f_frsize) / GB;
+  double total_gb = ((double)total_blocks * buffer.f_frsize) / GB;
+  int percentage = (used_blocks * 100) / total_blocks;
+
+  snprintf(out, 50, disk_format, used_gb, total_gb, percentage);
+}
 
 int main(void) {
   Display *dpy = XOpenDisplay(NULL);
@@ -57,7 +76,7 @@ int main(void) {
     status[0] = '\0';
 
     char module_output[100];
-    char formatted_block[150];
+    char formatted_block[120];
 
     size_t num_blocks = sizeof(blocks) / sizeof(blocks[0]);
 
