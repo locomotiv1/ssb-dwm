@@ -1,9 +1,9 @@
 #include "config.h"
+
 #include <X11/Xlib.h>
-#include <alsa/asoundlib.h>
-#include <alsa/control.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
@@ -63,6 +63,34 @@ void get_disk(char *out) {
   int percentage = (used_blocks * 100) / total_blocks;
 
   snprintf(out, 50, disk_format, used_gb, total_gb, percentage);
+}
+
+void get_battery(char *out){
+  int capacity = 0;
+  char status[12];
+  char s = '?';
+  FILE *cp = fopen("/sys/class/power_supply/BAT0/capacity", "r");
+  FILE *st = fopen("/sys/class/power_supply/BAT0/status", "r");
+
+  if (!(cp || st)) {
+    snprintf(out, 11, "No battery");
+    return;
+  }
+  fscanf(cp, "%d", &capacity);
+  fscanf(st, "%s", status);
+  if (strcmp(status, "Charging") == 0) {
+    s = '+';
+  }
+  if (strcmp(status, "Discharging") == 0) {
+    s = '-';
+  }
+  if (strcmp(status, "Full") == 0) {
+    s = '=';
+  }
+
+  fclose(cp);
+  fclose(st);
+  snprintf(out, 15, battery_format, capacity, s);
 }
 
 int main(void) {
