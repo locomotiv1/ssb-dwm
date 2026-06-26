@@ -1,7 +1,13 @@
+/*
+
+Put this inside of your .xinitrc file:
+ssb-dwm&
+
+*/
+
 #include "config.h"
 
 #include <X11/Xlib.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/statvfs.h>
@@ -65,7 +71,7 @@ void get_disk(char *out) {
   snprintf(out, 50, disk_format, used_gb, total_gb, percentage);
 }
 
-void get_battery(char *out){
+void get_battery(char *out) {
   int capacity = 0;
   char status[12];
   char s = '?';
@@ -92,6 +98,41 @@ void get_battery(char *out){
   fclose(st);
   snprintf(out, 15, battery_format, capacity, s);
 }
+
+void get_cpu(char *out) {
+  FILE *fl = fopen("/proc/stat", "r");
+  char line[256];
+  int usr = 0, ni = 0, sys = 0, idl = 0, io = 0, irq = 0, soft = 0;
+
+  while (fgets(line, sizeof(line), fl) != NULL) {
+    if (strncmp(line, "cpu ", 4) == 0) {
+      sscanf(line, "%*s %d %d %d %d %d %d %d", &usr, &ni, &sys, &idl, &io, &irq,
+             &soft);
+      break;
+    }
+  }
+  fclose(fl);
+
+  int current_total = usr + ni + sys + idl + io + irq + soft;
+  int current_idle = idl + io;
+
+  static int prev_total = 0;
+  static int prev_idle = 0;
+
+  float usage = 0.0;
+
+  int diff_total = current_total - prev_total;
+  int diff_idle = current_idle - prev_idle;
+
+  if (diff_total > 0 && prev_total > 0) {
+    usage = (1.0 - ((float)diff_idle / diff_total)) * 100.0;
+  }
+  prev_total = current_total;
+  prev_idle = current_idle;
+  snprintf(out, 10, cpu_format, usage);
+}
+
+void get_temps(char *out) {}
 
 int main(void) {
   Display *dpy = XOpenDisplay(NULL);

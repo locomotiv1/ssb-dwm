@@ -2,6 +2,7 @@ void get_date(char *out);
 void get_ram(char *out);
 void get_disk(char *out);
 void get_battery(char *out);
+void get_cpu(char *out);
 
 typedef struct {
   const char *format;
@@ -12,6 +13,7 @@ static const char *date_format = "%a %b %d | %R";
 static const char *ram_format = "%.2f/%.2fGB";
 static const char *disk_format = "%.2f/%.2fGB %d%%";
 static const char *battery_format = "%d%%%c";
+static const char *cpu_format = "%.f%%";
 
 static const Block blocks[] = {
     //  Format string             Function to run
@@ -19,4 +21,5 @@ static const Block blocks[] = {
     {" | RAM: %s",                get_ram},
     {" | /: %s ",                 get_disk},
     {" | Battery: %s ",           get_battery},
+    {"| CPU Usage: %s",         get_cpu},
 };
