@@ -21,5 +21,5 @@ static const Block blocks[] = {
     {" | RAM: %s",                get_ram},
     {" | /: %s ",                 get_disk},
     {" | Battery: %s ",           get_battery},
-    {"| CPU Usage: %s",         get_cpu},
+    {"| CPU Usage: %s",           get_cpu},
 };

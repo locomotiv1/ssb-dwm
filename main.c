@@ -132,8 +132,6 @@ void get_cpu(char *out) {
   snprintf(out, 10, cpu_format, usage);
 }
 
-void get_temps(char *out) {}
-
 int main(void) {
   Display *dpy = XOpenDisplay(NULL);
   if (!dpy)

@@ -1,5 +1,7 @@
 # SSB-DWM
 
+![SSB-dwm showcase](showcase.png)
+
 This bar is build only for dwm.
 
 Other x11 clients  dont support it as far as i know
